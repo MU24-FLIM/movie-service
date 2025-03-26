@@ -5,14 +5,18 @@ import java.util.List;
 public class MovieResponse {
 
     private Movie movie;
-    private List<Genre> genre;
+    private Genre genre;
+    private List<Review> reviews;
 
-    public MovieResponse(Movie movie, List<Genre> genre) {
+    public MovieResponse(Movie movie, Genre genre, List<Review> reviews) {
         this.movie = movie;
         this.genre = genre;
+        this.reviews = reviews;
     }
 
-    public MovieResponse() {
+    public MovieResponse(Movie movie, List<Review> reviews) {
+        this.movie = movie;
+        this.reviews = reviews;
     }
 
     public Movie getMovie() {
@@ -23,11 +27,19 @@ public class MovieResponse {
         this.movie = movie;
     }
 
-    public List<Genre> getGenre() {
+    public Genre getGenre() {
         return genre;
     }
 
-    public void setGenre(List<Genre> genre) {
+    public void setGenre(Genre genre) {
         this.genre = genre;
+    }
+
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
     }
 }
