@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
-import java.util.Set;
-
 @Table(name = "movies")
 @Entity
 public class Movie {
@@ -25,8 +22,8 @@ public class Movie {
     @Min(value = 1900)
     @Max(value = 2050)
     private int released;
-    @ElementCollection
-    private List<Integer> genres;
+    @NotNull
+    private int genreId;
 
     public Movie() {
     }
@@ -63,11 +60,12 @@ public class Movie {
         this.released = released;
     }
 
-    public List<Integer> getGenres() {
-        return genres;
+    public int getGenreId() {
+        return genreId;
     }
 
-    public void setGenres(List<Integer> genres) {
-        this.genres = genres;
+    public void setGenreId(int genreId) {
+        this.genreId = genreId;
     }
+
 }
