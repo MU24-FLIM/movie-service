@@ -10,19 +10,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/movies")
 public class MovieController {
-    //
-//    private WebClient reviewClient;
-//    private WebClient genreClient;
+
+    private final WebClient reviewClient;
+    private final WebClient genreClient;
     private final MovieRepository movieRepository;
 
-//
-//    public MovieController(WebClient.Builder reviewClient, WebClient.Builder genreClient, MovieRepository movieRepository) {
-//        this.reviewClient = reviewClient.baseUrl().build();
-//        this.genreClient = genreClient.baseUrl().build();
-//        this.movieRepository = movieRepository;
-//    }
-
-    public MovieController(MovieRepository movieRepository) {
+    public MovieController(WebClient.Builder reviewClientBuilder, WebClient.Builder genreClientBuilder, MovieRepository movieRepository) {
+        this.reviewClient = reviewClientBuilder.baseUrl(System.getenv("REVIEW_CLIENT_URL")).build();
+        this.genreClient = genreClientBuilder.baseUrl(System.getenv("GENRE_CLIENT_URL")).build();
         this.movieRepository = movieRepository;
     }
 
