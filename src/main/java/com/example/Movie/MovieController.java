@@ -4,6 +4,9 @@ package com.example.Movie;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -32,11 +35,19 @@ public class MovieController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
+    public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
         Movie movie = movieRepository.findById(id).orElse(null);
-        if (movie != null) {
-            return ResponseEntity.ok(movie);
-        } else return ResponseEntity.notFound().build();
+        Mono<Genre> genre = getGenre(id);
+        Flux<Review> review = getReview(id);
+        return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
+    }
+
+
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<MovieResponse> getMovieAndReviewsByMovieId(@PathVariable Long id) {
+        Movie movie = movieRepository.findById(id).orElse(null);
+        Flux<Review> review = getReview(id);
+        return ResponseEntity.ok(new MovieResponse(movie, review.collectList().block()));
     }
 
 
@@ -48,5 +59,22 @@ public class MovieController {
         } else return ResponseEntity.notFound().build();
     }
 
+    public Mono<Genre> getGenre(Long id) {
+        return movieRepository.findById(id).map(movie ->
+                        genreClient.get()
+                                .uri("/genres/" + movie.getGenreId())
+                                .retrieve()
+                                .bodyToMono(Genre.class))
+                .orElse(null);
+    }
+
+    public Flux<Review> getReview(Long id) {
+        return movieRepository.findById(id).map(movie ->
+                        reviewClient.get()
+                                .uri("/reviews/" + movie.getId())
+                                .retrieve()
+                                .bodyToFlux(Review.class))
+                .orElse(Flux.empty());
+    }
 
 }
