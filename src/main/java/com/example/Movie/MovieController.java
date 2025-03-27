@@ -1,7 +1,11 @@
 package com.example.Movie;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.apache.coyote.BadRequestException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,8 +29,12 @@ public class MovieController {
     }
 
     @PostMapping
-    public ResponseEntity<Movie> addMovie(@RequestBody @Valid Movie movie) {
-        return ResponseEntity.ok(movieRepository.save(movie));
+    public ResponseEntity<Movie> addMovie(@RequestBody @Valid Movie movie) throws BadRequestException {
+//        boolean bool = Boolean.TRUE.equals(genreExists(movie.getGenreId()).block());
+//        System.out.println(bool);
+//        if (bool) {
+            return ResponseEntity.ok(movieRepository.save(movie));
+//        } else throw new BadRequestException("INVALID GENRE ID");
     }
 
     @GetMapping
@@ -42,6 +50,10 @@ public class MovieController {
         return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
     }
 
+    @GetMapping("/genre/{genreId}")
+    public List<Movie> getMoviesById(@PathVariable int genreId){
+        return movieRepository.findByGenreId(genreId);
+    }
 
     @GetMapping("/{id}/reviews")
     public ResponseEntity<MovieResponse> getMovieAndReviewsByMovieId(@PathVariable Long id) {
@@ -62,7 +74,7 @@ public class MovieController {
     public Mono<Genre> getGenre(Long id) {
         return movieRepository.findById(id).map(movie ->
                         genreClient.get()
-                                .uri("/genres/" + movie.getGenreId())
+                                .uri("/genre/" + movie.getGenreId())
                                 .retrieve()
                                 .bodyToMono(Genre.class))
                 .orElse(null);
@@ -75,6 +87,16 @@ public class MovieController {
                                 .retrieve()
                                 .bodyToFlux(Review.class))
                 .orElse(Flux.empty());
+    }
+
+
+    public Mono<Boolean> genreExists(int id) {
+        return genreClient.get()
+                .uri("/genre/exists/" + id)
+                .retrieve()
+                .onStatus(HttpStatusCode.valueOf(404)::equals, res -> Mono.error(new EntityNotFoundException("Book ID not found (response from book) (from loan)")))
+                .onStatus(HttpStatus.BAD_REQUEST::equals, res -> Mono.error(new BadRequestException("Book is not available (response from book)(from loan) ")))
+                .bodyToMono(Boolean.class);
     }
 
 }

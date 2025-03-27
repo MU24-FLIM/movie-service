@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-@Table(name = "movies")
+@Table(name = "movies", uniqueConstraints = { @UniqueConstraint(columnNames = {"title", "released"})})
 @Entity
 public class Movie {
 
