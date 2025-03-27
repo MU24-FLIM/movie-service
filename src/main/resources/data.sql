@@ -1,0 +1,28 @@
+INSERT IGNORE INTO movies (title, director, released, genre_id)
+VALUES
+    ('Pixel Soluppgång', 'Steve', 2024, 1),
+    ('Grottans Eko', 'Steve', 2024, 1),
+    ('Drömmar av Redstone', 'Steve', 2024, 2),
+    ('Skogens Biom', 'Steve', 2020, 3),
+    ('Havets Djup', 'Steve', 2019, 3),
+    ('Stjärnklara Nätter', 'Steve', 2018, 3),
+    ('Livets Crafting', 'Alex', 2001, 5),
+    ('Kärlekens Potion', 'Alex', 1912, 2),
+    ('Hoppets Fackla', 'Alex', 1910, 4),
+    ('Byggarens Flöde', 'Alex', 1990, 4),
+    ('Äventyrets Karta', 'Alex', 1980, 4),
+    ('Tacksamhetens Kista', 'Alex', 2012, 4),
+    ('Förändringens Biomer', 'Creeper', 1987, 4),
+    ('Inre Fredens Ö', 'Creeper', 1974, 4),
+    ('Naturens Texturer', 'Creeper', 1968, 4),
+    ('Vänskapens Portal', 'Creeper', 1985, 5),
+    ('Lärdomens Bok', 'Creeper', 1958, 5),
+    ('Modets Svärd', 'Creeper', 1941, 5),
+    ('Glädjens Explosion', 'Creeper', 2012, 5),
+    ('Stillhetens Block', 'Creeper', 1974, 5),
+    ('Fantasins Bygge', 'Creeper', 2001, 5),
+    ('Kunskapens Träd', 'Creeper', 1972, 5),
+    ('Tålamodets Gruva', 'Creeper', 1968, 5),
+    ('Inspirationens Kista', 'Creeper', 1984, 5),
+    ('Livets Färd', 'Creeper',2011 , 5)
+;
