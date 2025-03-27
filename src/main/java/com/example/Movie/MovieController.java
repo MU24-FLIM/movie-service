@@ -4,14 +4,15 @@ package com.example.Movie;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -28,15 +29,17 @@ public class MovieController {
         this.movieRepository = movieRepository;
     }
 
+    //Create
     @PostMapping
     public ResponseEntity<Movie> addMovie(@RequestBody @Valid Movie movie) throws BadRequestException {
-//        boolean bool = Boolean.TRUE.equals(genreExists(movie.getGenreId()).block());
-//        System.out.println(bool);
-//        if (bool) {
+        boolean bool = Boolean.TRUE.equals(genreExists(movie.getGenreId()).block());
+        System.out.println(bool);
+        if (bool) {
             return ResponseEntity.ok(movieRepository.save(movie));
-//        } else throw new BadRequestException("INVALID GENRE ID");
+        } else throw new BadRequestException("INVALID GENRE ID");
     }
 
+    //Read
     @GetMapping
     public ResponseEntity<List<Movie>> getAllMovies() {
         return ResponseEntity.ok(movieRepository.findAll());
@@ -45,13 +48,16 @@ public class MovieController {
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
         Movie movie = movieRepository.findById(id).orElse(null);
-        Mono<Genre> genre = getGenre(id);
-        Flux<Review> review = getReview(id);
-        return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
+        if (movie != null) {
+            Mono<Genre> genre = getGenre(id);
+            Flux<Review> review = getReview(id);
+            return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
+        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+
     }
 
     @GetMapping("/genre/{genreId}")
-    public List<Movie> getMoviesById(@PathVariable int genreId){
+    public List<Movie> getMoviesByGenreId(@PathVariable int genreId) {
         return movieRepository.findByGenreId(genreId);
     }
 
@@ -62,7 +68,6 @@ public class MovieController {
         return ResponseEntity.ok(new MovieResponse(movie, review.collectList().block()));
     }
 
-
     @GetMapping("/findByTitle/{query}")
     public ResponseEntity<List<Movie>> getMovieByQueryInTitle(@PathVariable String query) {
         List<Movie> movies = movieRepository.findAllByTitleContainingIgnoreCase(query);
@@ -72,31 +77,45 @@ public class MovieController {
     }
 
     public Mono<Genre> getGenre(Long id) {
-        return movieRepository.findById(id).map(movie ->
+        return Mono.justOrEmpty(movieRepository.findById(id))
+                .flatMap(movie ->
                         genreClient.get()
                                 .uri("/genre/" + movie.getGenreId())
                                 .retrieve()
                                 .bodyToMono(Genre.class))
-                .orElse(null);
+                .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+                                new BadRequestException("UNABLE TO CONNECT TO GENRE SERVICE", retrySignal.failure())
+                        )
+                )
+                .switchIfEmpty(Mono.empty());
     }
 
     public Flux<Review> getReview(Long id) {
-        return movieRepository.findById(id).map(movie ->
+        return Mono.justOrEmpty(movieRepository.findById(id))
+                .flatMapMany(movie ->
                         reviewClient.get()
                                 .uri("/reviews/" + movie.getId())
                                 .retrieve()
-                                .bodyToFlux(Review.class))
-                .orElse(Flux.empty());
+                                .bodyToFlux(Review.class)
+                                .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
+                                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+                                                new BadRequestException("UNABLE TO CONNECT TO REVIEW SERVICE", retrySignal.failure())
+                                        )
+                                )
+                )
+                .switchIfEmpty(Flux.empty());
     }
-
 
     public Mono<Boolean> genreExists(int id) {
         return genreClient.get()
                 .uri("/genre/exists/" + id)
                 .retrieve()
-                .onStatus(HttpStatusCode.valueOf(404)::equals, res -> Mono.error(new EntityNotFoundException("Book ID not found (response from book) (from loan)")))
-                .onStatus(HttpStatus.BAD_REQUEST::equals, res -> Mono.error(new BadRequestException("Book is not available (response from book)(from loan) ")))
-                .bodyToMono(Boolean.class);
+                .bodyToMono(Boolean.class)
+                .onErrorResume(Mono::error)
+                .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+                                new BadRequestException("UNABLE TO CONNECT TO GENRE SERVICE", retrySignal.failure())));
     }
 
 }
