@@ -76,13 +76,11 @@ public class MovieController {
         } else return ResponseEntity.notFound().build();
     }
 
-    public Mono<Genre> getGenre(Long id) {
-        return Mono.justOrEmpty(movieRepository.findById(id))
-                .flatMap(movie ->
-                        genreClient.get()
-                                .uri("/genre/" + movie.getGenreId())
-                                .retrieve()
-                                .bodyToMono(Genre.class))
+    public Mono<Genre> getGenre(int genreId) {
+        return genreClient.get()
+                .uri("/genre/" + genreId)
+                .retrieve()
+                .bodyToMono(Genre.class)
                 .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
                                 new BadRequestException("UNABLE TO CONNECT TO GENRE SERVICE", retrySignal.failure())
@@ -109,7 +107,6 @@ public class MovieController {
                 .uri("/genre/exists/" + id)
                 .retrieve()
                 .bodyToMono(Boolean.class)
-                .onErrorResume(Mono::error)
                 .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
                                 new BadRequestException("UNABLE TO CONNECT TO GENRE SERVICE", retrySignal.failure())));
