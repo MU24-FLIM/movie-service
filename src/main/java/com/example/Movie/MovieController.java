@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
+import javax.naming.ServiceUnavailableException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -83,23 +84,21 @@ public class MovieController {
                 .bodyToMono(Genre.class)
                 .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
-                                new BadRequestException("UNABLE TO CONNECT TO GENRE SERVICE", retrySignal.failure())
+                                new ServiceUnavailableException("UNABLE TO CONNECT TO GENRE SERVICE")
                         )
-                )
-                .switchIfEmpty(Mono.empty());
+                );
     }
 
     public Flux<Review> getReview(Long id) {
-        return   reviewClient.get()
-                                .uri("/reviews/" + id + "/review")
-                                .retrieve()
-                                .bodyToFlux(Review.class)
-                                .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
-                                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
-                                                new BadRequestException("UNABLE TO CONNECT TO REVIEW SERVICE", retrySignal.failure())
-                                        )
-                                );
-
+        return reviewClient.get()
+                .uri("/reviews/" + id + "/review")
+                .retrieve()
+                .bodyToFlux(Review.class)
+                .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+                                new ServiceUnavailableException("UNABLE TO CONNECT TO REVIEW SERVICE")
+                        )
+                );
     }
 
     public Mono<Boolean> genreExists(int id) {
@@ -109,7 +108,9 @@ public class MovieController {
                 .bodyToMono(Boolean.class)
                 .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
-                                new BadRequestException("UNABLE TO CONNECT TO GENRE SERVICE", retrySignal.failure())));
+                                new ServiceUnavailableException("UNABLE TO CONNECT TO GENRE SERVICE")
+                        )
+                );
     }
 
 }
