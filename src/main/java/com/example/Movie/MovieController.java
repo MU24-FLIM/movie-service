@@ -50,7 +50,7 @@ public class MovieController {
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
         Movie movie = movieRepository.findById(id).orElse(null);
         if (movie != null) {
-            Mono<Genre> genre = getGenre(id);
+            Mono<Genre> genre = getGenre(movie.getGenreId());
             Flux<Review> review = getReview(id);
             return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
         } else throw new EntityNotFoundException("INVALID MOVIE ID");
