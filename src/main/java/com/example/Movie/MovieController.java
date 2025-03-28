@@ -92,19 +92,16 @@ public class MovieController {
     }
 
     public Flux<Review> getReview(Long id) {
-        return Mono.justOrEmpty(movieRepository.findById(id))
-                .flatMapMany(movie ->
-                        reviewClient.get()
-                                .uri("/reviews/" + movie.getId())
+        return   reviewClient.get()
+                                .uri("/reviews/" + id + "/review")
                                 .retrieve()
                                 .bodyToFlux(Review.class)
                                 .retryWhen(Retry.backoff(2, Duration.of(1, ChronoUnit.SECONDS))
                                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
                                                 new BadRequestException("UNABLE TO CONNECT TO REVIEW SERVICE", retrySignal.failure())
                                         )
-                                )
-                )
-                .switchIfEmpty(Flux.empty());
+                                );
+
     }
 
     public Mono<Boolean> genreExists(int id) {
