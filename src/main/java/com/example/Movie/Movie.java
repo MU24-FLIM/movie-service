@@ -14,10 +14,10 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotNull
-    @Size(min = 6, max = 32)
+    @Size(max = 32)
     private String title;
     @NotNull
-    @Size(min = 6, max = 64)
+    @Size(max = 64)
     private String director;
     @Min(value = 1900)
     @Max(value = 2050)
