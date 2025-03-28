@@ -77,7 +77,28 @@ public class MovieController {
         } else return ResponseEntity.notFound().build();
     }
 
-    public Mono<Genre> getGenre(int genreId) {
+    //Update
+    @PutMapping("/{id}")
+    public ResponseEntity<Movie> updateMovieById(@PathVariable Long id, @RequestBody Movie updatedMovie) {
+        Movie movieToUpdate = movieRepository.findById(id).orElse(null);
+        if (movieToUpdate != null) {
+            movieToUpdate = updatedMovie;
+            return ResponseEntity.ok(movieRepository.save(movieToUpdate));
+        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+    }
+
+    //Delete
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteMovieById(@PathVariable Long id) {
+        if(isValidMovieId(id)) {
+            movieRepository.deleteById(id);
+            return ResponseEntity.ok("DELETED SUCCESSFULLY");
+        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+    }
+
+
+    //Helper methods
+    private Mono<Genre> getGenre(int genreId) {
         return genreClient.get()
                 .uri("/genre/" + genreId)
                 .retrieve()
@@ -89,7 +110,7 @@ public class MovieController {
                 );
     }
 
-    public Flux<Review> getReview(Long id) {
+    private Flux<Review> getReview(Long id) {
         return reviewClient.get()
                 .uri("/reviews/" + id + "/review")
                 .retrieve()
@@ -101,7 +122,7 @@ public class MovieController {
                 );
     }
 
-    public Mono<Boolean> genreExists(int id) {
+    private Mono<Boolean> genreExists(int id) {
         return genreClient.get()
                 .uri("/genre/exists/" + id)
                 .retrieve()
@@ -111,6 +132,10 @@ public class MovieController {
                                 new ServiceUnavailableException("UNABLE TO CONNECT TO GENRE SERVICE")
                         )
                 );
+    }
+
+    private boolean isValidMovieId(Long id){
+        return movieRepository.existsById(id);
     }
 
 }
