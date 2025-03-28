@@ -58,8 +58,8 @@ public class MovieController {
     }
 
     @GetMapping("/genre/{genreId}")
-    public List<Movie> getMoviesByGenreId(@PathVariable int genreId) {
-        return movieRepository.findByGenreId(genreId);
+    public ResponseEntity<List<Movie>> getMoviesByGenreId(@PathVariable int genreId) {
+        return ResponseEntity.ok(movieRepository.findByGenreId(genreId));
     }
 
     @GetMapping("/{id}/reviews")
@@ -69,12 +69,30 @@ public class MovieController {
         return ResponseEntity.ok(new MovieResponse(movie, review.collectList().block()));
     }
 
-    @GetMapping("/findByTitle/{query}")
+    @GetMapping("/find/byTitle/{query}")
     public ResponseEntity<List<Movie>> getMovieByQueryInTitle(@PathVariable String query) {
         List<Movie> movies = movieRepository.findAllByTitleContainingIgnoreCase(query);
         if (!movies.isEmpty()) {
             return ResponseEntity.ok(movies);
         } else return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/find/byDirector/{query}")
+    public ResponseEntity<List<Movie>> getMovieByQueryInDirector(@PathVariable String query) {
+        List<Movie> movies = movieRepository.findAllByDirectorContainingIgnoreCase(query);
+        if (!movies.isEmpty()) {
+            return ResponseEntity.ok(movies);
+        } else return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/find/byReleaseYear/{query}")
+    public ResponseEntity<List<Movie>> getMovieByReleased(@PathVariable int query) throws BadRequestException {
+        if (query > 1900 && query < 2050 ) {
+            List<Movie> movies = movieRepository.findAllByReleased(query);
+            if (!movies.isEmpty()) {
+                return ResponseEntity.ok(movies);
+            } else return ResponseEntity.notFound().build();
+        } else throw new BadRequestException("INVALID YEAR");
     }
 
     //Update
