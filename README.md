@@ -26,6 +26,7 @@
 - Presentation
 
 ## Service specific
+
 ### Movie ("/movies")
 
 Syntax for creating/updating a movie
@@ -47,17 +48,17 @@ Syntax for creating/updating a movie
 | `genreId`  | int       | Not null                                     |
 |            |           | `title` and `released` paired must be unique |
 
-| Command | Operation                                | Endpoint                   | Returns                         |
-|---------|------------------------------------------|----------------------------|---------------------------------|
-| POST    | Create a new movie                       |                            | `ResponseEntity<Movie>`         |
-| GET     | Get all movies                           |                            | `ResponseEntity<List<Movie>>`   |
-|         | Get a movie by ID                        | `/{id}`                    | `ResponseEntity<MovieResponse>` |
-|         | Get movies by genre ID                   | `/genre/{genreId}`         | `ResponseEntity<List<Movie>>`   |
-|         | Get movies by a search query in title    | `/find/byTitle/{query}`    | `ResponseEntity<List<Movie>>`   |
-|         | Get movies by a search query in director | `/find/byDirector/{query}` | `ResponseEntity<List<Movie>>`   |
-|         | Get movies by a search query in released | `/find/byReleased/{query}` | `ResponseEntity<List<Movie>>`   |
-| PUT     | Update a movie by ID                     | `/{id}`                    | `Movie`                         |
-| DELETE  | Delete a movie by ID                     | `/{id}`                    | `void`                          |
+| Command | Operation                              | Endpoint                      | Returns           |
+|---------|----------------------------------------|-------------------------------|-------------------|
+| POST    | Create a new movie                     |                               | `<Movie>`         |
+| GET     | Get all movies                         |                               | `<List<Movie>`    |
+|         | Get a movie by ID                      | `/{id}`                       | `<MovieResponse>` |
+|         | Get movies by genre ID                 | `/genre/{genreId}`            | `<List<Movie>`    |
+|         | Get movies by search query in title    | `/find/byTitle/{query}`       | `<List<Movie>`    |
+|         | Get movies by search query in director | `/find/byDirector/{query}`    | `<List<Movie>`    |
+|         | Get movies by search query in released | `/find/byReleaseYear/{query}` | `<List<Movie>`    |
+| PUT     | Update a movie by ID                   | `/{id}`                       | `Movie`           |
+| DELETE  | Delete a movie by ID                   | `/{id}`                       | `void`            |
 
 ## Project overview
 
@@ -65,6 +66,7 @@ Syntax for creating/updating a movie
 
 A group project to build an application consisting of four separate micro services.
 The project group:
+
 - Fredrik
 - Linda
 - Ivana
@@ -75,8 +77,9 @@ The project group:
 ---
 
 ### Project description
-A movie review application built with four separate microservices for handling movies, genres, reviews and users. 
-Spring Reactive WebClient is used to handle HTTP requests between the services. Each microservice has their own MySQL 
+
+A movie review application built with four separate microservices for handling movies, genres, reviews and users.
+Spring Reactive WebClient is used to handle HTTP requests between the services. Each microservice has their own MySQL
 database.
 
 ---
@@ -140,21 +143,16 @@ Syntax for creating/updating a movie
 | PUT     | Update a movie by ID                     | `/{id}`                    | `Movie`                         |
 | DELETE  | Delete a movie by ID                     | `/{id}`                    | `void`                          |
 
-
-
 ### Genre ("/genres")
-
 
 ### Review ("/reviews")
 
-
 ### User ("/users")
-
-
 
 ## Project documentation
 
 - [Jira board  ](https://fredande.atlassian.net/jira/software/projects/MAMSBOM/boards/37)
 - [UML diagram on Lucid](https://lucid.app/lucidchart/26244de5-ae26-4119-a72d-2a5f4abbc9a2/edit?viewport_loc=-2493%2C-408%2C5589%2C3184%2C0_0&invitationId=inv_ada08cf4-4d1f-4876-b168-f5f9b75f7635)
+
 ---
 
