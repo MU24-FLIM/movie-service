@@ -22,13 +22,11 @@ public class MovieController {
 
     private final WebClient reviewClient;
     private final WebClient genreClient;
-    private final MovieRepository movieRepository;
     private final MovieService movieService;
 
-    public MovieController(WebClient.Builder reviewClientBuilder, WebClient.Builder genreClientBuilder, MovieRepository movieRepository, MovieService movieService) {
+    public MovieController(WebClient.Builder reviewClientBuilder, WebClient.Builder genreClientBuilder, MovieService movieService) {
         this.reviewClient = reviewClientBuilder.baseUrl(System.getenv("REVIEW_CLIENT_URL")).build();
         this.genreClient = genreClientBuilder.baseUrl(System.getenv("GENRE_CLIENT_URL")).build();
-        this.movieRepository = movieRepository;
         this.movieService = movieService;
     }
 
