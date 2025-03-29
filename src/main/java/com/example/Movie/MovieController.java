@@ -22,98 +22,76 @@ public class MovieController {
 
     private final WebClient reviewClient;
     private final WebClient genreClient;
-    private final MovieRepository movieRepository;
+    private final MovieService movieService;
 
-    public MovieController(WebClient.Builder reviewClientBuilder, WebClient.Builder genreClientBuilder, MovieRepository movieRepository) {
+    public MovieController(WebClient.Builder reviewClientBuilder, WebClient.Builder genreClientBuilder, MovieService movieService) {
         this.reviewClient = reviewClientBuilder.baseUrl(System.getenv("REVIEW_CLIENT_URL")).build();
         this.genreClient = genreClientBuilder.baseUrl(System.getenv("GENRE_CLIENT_URL")).build();
-        this.movieRepository = movieRepository;
+        this.movieService = movieService;
     }
 
     //Create
     @PostMapping
     public ResponseEntity<Movie> addMovie(@RequestBody @Valid Movie movie) throws BadRequestException {
-        boolean bool = Boolean.TRUE.equals(genreExists(movie.getGenreId()).block());
-        System.out.println(bool);
-        if (bool) {
-            return ResponseEntity.ok(movieRepository.save(movie));
+        if (genreExists(movie.getGenreId())) {
+            return ResponseEntity.ok(movieService.addMovie(movie));
         } else throw new BadRequestException("INVALID GENRE ID");
     }
 
     //Read
     @GetMapping
     public ResponseEntity<List<Movie>> getAllMovies() {
-        return ResponseEntity.ok(movieRepository.findAll());
+        return ResponseEntity.ok(movieService.getAllMovies());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
-        Movie movie = movieRepository.findById(id).orElse(null);
+        Movie movie = movieService.getMovieById(id);
         if (movie != null) {
             Mono<Genre> genre = getGenre(movie.getGenreId());
             Flux<Review> review = getReview(id);
             return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
         } else throw new EntityNotFoundException("INVALID MOVIE ID");
-
     }
 
     @GetMapping("/genre/{genreId}")
     public ResponseEntity<List<Movie>> getMoviesByGenreId(@PathVariable int genreId) {
-        return ResponseEntity.ok(movieRepository.findByGenreId(genreId));
+        return ResponseEntity.ok(movieService.getMoviesByGenreId(genreId));
     }
 
     @GetMapping("/{id}/reviews")
     public ResponseEntity<MovieResponse> getMovieAndReviewsByMovieId(@PathVariable Long id) {
-        Movie movie = movieRepository.findById(id).orElse(null);
+        Movie movie = movieService.getMovieById(id);
         Flux<Review> review = getReview(id);
         return ResponseEntity.ok(new MovieResponse(movie, review.collectList().block()));
     }
 
     @GetMapping("/find/byTitle/{query}")
     public ResponseEntity<List<Movie>> getMovieByQueryInTitle(@PathVariable String query) {
-        List<Movie> movies = movieRepository.findAllByTitleContainingIgnoreCase(query);
-        if (!movies.isEmpty()) {
-            return ResponseEntity.ok(movies);
-        } else return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(movieService.getMovieByQueryInTitle(query));
     }
 
     @GetMapping("/find/byDirector/{query}")
     public ResponseEntity<List<Movie>> getMovieByQueryInDirector(@PathVariable String query) {
-        List<Movie> movies = movieRepository.findAllByDirectorContainingIgnoreCase(query);
-        if (!movies.isEmpty()) {
-            return ResponseEntity.ok(movies);
-        } else return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(movieService.getMovieByQueryInDirector(query));
     }
 
     @GetMapping("/find/byReleaseYear/{query}")
     public ResponseEntity<List<Movie>> getMovieByReleased(@PathVariable int query) throws BadRequestException {
-        if (query > 1900 && query < 2050 ) {
-            List<Movie> movies = movieRepository.findAllByReleased(query);
-            if (!movies.isEmpty()) {
-                return ResponseEntity.ok(movies);
-            } else return ResponseEntity.notFound().build();
-        } else throw new BadRequestException("INVALID YEAR");
+        return ResponseEntity.ok(movieService.getMovieByReleased(query));
     }
 
     //Update
     @PutMapping("/{id}")
     public ResponseEntity<Movie> updateMovieById(@PathVariable Long id, @RequestBody Movie updatedMovie) {
-        Movie movieToUpdate = movieRepository.findById(id).orElse(null);
-        if (movieToUpdate != null) {
-            movieToUpdate = updatedMovie;
-            return ResponseEntity.ok(movieRepository.save(movieToUpdate));
-        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+        return ResponseEntity.ok(movieService.updateMovieById(id, updatedMovie));
     }
 
     //Delete
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteMovieById(@PathVariable Long id) {
-        if(isValidMovieId(id)) {
-            movieRepository.deleteById(id);
-            return ResponseEntity.ok("DELETED SUCCESSFULLY");
-        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+        return ResponseEntity.ok(movieService.deleteMovieById(id));
     }
-
 
     //Helper methods
     private Mono<Genre> getGenre(int genreId) {
@@ -140,8 +118,8 @@ public class MovieController {
                 );
     }
 
-    private Mono<Boolean> genreExists(int id) {
-        return genreClient.get()
+    private boolean genreExists(int id) {
+        return Boolean.TRUE.equals(genreClient.get()
                 .uri("/genre/exists/" + id)
                 .retrieve()
                 .bodyToMono(Boolean.class)
@@ -149,11 +127,7 @@ public class MovieController {
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
                                 new ServiceUnavailableException("UNABLE TO CONNECT TO GENRE SERVICE")
                         )
-                );
-    }
-
-    private boolean isValidMovieId(Long id){
-        return movieRepository.existsById(id);
+                ).block());
     }
 
 }
