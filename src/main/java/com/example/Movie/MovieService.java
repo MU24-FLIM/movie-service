@@ -59,5 +59,16 @@ public class MovieService {
         } else throw new BadRequestException("INVALID YEAR");
     }
 
+    //DELETE
+    public String deleteMovieById(Long id) {
+        if(isValidMovieId(id)) {
+            movieRepository.deleteById(id);
+            return "DELETED SUCCESSFULLY";
+        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+    }
+
+    private boolean isValidMovieId(Long id){
+        return movieRepository.existsById(id);
+    }
 
 }

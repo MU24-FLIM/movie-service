@@ -59,7 +59,7 @@ public class MovieController {
 
     @GetMapping("/genre/{genreId}")
     public ResponseEntity<List<Movie>> getMoviesByGenreId(@PathVariable int genreId) {
-        return ResponseEntity.ok(movieRepository.findByGenreId(genreId));
+        return ResponseEntity.ok(movieService.getMoviesByGenreId(genreId));
     }
 
     @GetMapping("/{id}/reviews")
@@ -87,20 +87,17 @@ public class MovieController {
     //Update
     @PutMapping("/{id}")
     public ResponseEntity<Movie> updateMovieById(@PathVariable Long id, @RequestBody Movie updatedMovie) {
-        Movie movieToUpdate = movieRepository.findById(id).orElse(null);
+        Movie movieToUpdate = movieService.getMovieById(id);
         if (movieToUpdate != null) {
             movieToUpdate = updatedMovie;
-            return ResponseEntity.ok(movieRepository.save(movieToUpdate));
+            return ResponseEntity.ok(movieService.addMovie(movieToUpdate));
         } else throw new EntityNotFoundException("INVALID MOVIE ID");
     }
 
     //Delete
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteMovieById(@PathVariable Long id) {
-        if(isValidMovieId(id)) {
-            movieRepository.deleteById(id);
-            return ResponseEntity.ok("DELETED SUCCESSFULLY");
-        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+        return ResponseEntity.ok(movieService.deleteMovieById(id));
     }
 
 
@@ -139,10 +136,6 @@ public class MovieController {
                                 new ServiceUnavailableException("UNABLE TO CONNECT TO GENRE SERVICE")
                         )
                 ).block());
-    }
-
-    private boolean isValidMovieId(Long id){
-        return movieRepository.existsById(id);
     }
 
 }
