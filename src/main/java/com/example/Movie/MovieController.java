@@ -52,7 +52,6 @@ public class MovieController {
             Flux<Review> review = getReview(id);
             return ResponseEntity.ok(new MovieResponse(movie, genre.block(), review.collectList().block()));
         } else throw new EntityNotFoundException("INVALID MOVIE ID");
-
     }
 
     @GetMapping("/genre/{genreId}")
@@ -85,11 +84,7 @@ public class MovieController {
     //Update
     @PutMapping("/{id}")
     public ResponseEntity<Movie> updateMovieById(@PathVariable Long id, @RequestBody Movie updatedMovie) {
-        Movie movieToUpdate = movieService.getMovieById(id);
-        if (movieToUpdate != null) {
-            movieToUpdate = updatedMovie;
-            return ResponseEntity.ok(movieService.addMovie(movieToUpdate));
-        } else throw new EntityNotFoundException("INVALID MOVIE ID");
+        return ResponseEntity.ok(movieService.updateMovieById(id, updatedMovie));
     }
 
     //Delete
@@ -97,7 +92,6 @@ public class MovieController {
     public ResponseEntity<String> deleteMovieById(@PathVariable Long id) {
         return ResponseEntity.ok(movieService.deleteMovieById(id));
     }
-
 
     //Helper methods
     private Mono<Genre> getGenre(int genreId) {
